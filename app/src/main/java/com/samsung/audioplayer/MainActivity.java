@@ -7,6 +7,7 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.content.ContentResolver;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.media.MediaParser;
@@ -16,24 +17,34 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, SeekBar.OnSeekBarChangeListener {
 
+    final String toMusic ="/storage/self/primary/Music";
     TextView position, lastPosition;
     ImageView previous, play, pause, next;
     SeekBar seekBar;
     MediaPlayer player;
     MyThread myThread;
     ArrayList<String> arrayList;
+    public ArrayList<File> files;
+    public ListView listView;
     final static int MY_PERMISSION_REQUEST = 1;
+    Uri songUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +55,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
         }
-        Log.d("no Tag", "1");
         pause = findViewById(R.id.pause);
         pause.setOnClickListener(this);
         play = findViewById(R.id.play);
@@ -62,9 +72,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         seekBar.setMax(player.getDuration());
         myThread = new MyThread();
         myThread.start();
+        File directory = new File(String.valueOf(toMusic));
+        File[] filesraw = directory.listFiles();
+        files = new ArrayList<>();
+        for (int i = 0; i < filesraw.length; i++) {
+            if(filesraw[i].isFile()){
+                files.add(filesraw[i]);
+            }
+        }
         arrayList = new ArrayList<>();
+        listView = findViewById(R.id.listView);
+        ArrayAdapter<File> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, files);
+        listView.setAdapter(adapter);
         getMusic();
-        Log.d("no Tag", "1");
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View itemClicked, int position,
+                                    long id) {
+                String song = ""+toMusic +"/" + files.get(position);
+                try {
+                    player.setDataSource(song);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+
     }
 
     @Override
@@ -90,6 +124,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 break;
             }
+            case R.id.playList:{
+                Intent intent = new Intent(this, PlayLists.class);
+                startActivity(intent);
+                break;
+            }
+            default:
+                throw new IllegalStateException("Unexpected value: " + view.getId());
         }
     }
 
@@ -141,7 +182,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void getMusic() {
         ContentResolver contentResolver = getContentResolver();
-        Uri songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor songCursor = contentResolver.query(songUri, null, null, null, null);
         Log.d("no Tag", "1");
         if (songCursor != null && songCursor.moveToFirst()) {

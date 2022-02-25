@@ -1,78 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout android:layout_width="match_parent"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
     android:layout_height="match_parent" xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:gravity="center"
     android:background="@color/Blau">
 
     <ImageView
+        android:id="@+id/imageView"
         android:layout_width="match_parent"
         android:layout_height="250dp"
-        android:src="@drawable/ic_music_note_24" />
+        android:src="@drawable/ic_music_note_24"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_editor_absoluteX="10dp" />
 
     <LinearLayout
+        android:id="@+id/linearLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:orientation="horizontal"
-        android:layout_marginHorizontal="10dp">
-
-        <TextView
-            android:id="@+id/position"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="00.00"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:textColor="@color/white"/>
-
-        <SeekBar
-            android:id="@+id/seekBar"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"/>
-
-        <TextView
-            android:id="@+id/lastPosition"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="00.00"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:textColor="@color/white"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center">
+        app:layout_constraintTop_toBottomOf="@+id/imageView"
+        tools:layout_editor_absoluteX="-16dp">
 
         <ImageView
             android:id="@+id/previous"
             android:layout_width="60dp"
             android:layout_height="60dp"
-            android:src="@drawable/ic_baseline_skip_previous_24"
-            android:background="@null"/>
+            android:background="@null"
+            android:src="@drawable/ic_baseline_skip_previous_24" />
+
         <ImageView
             android:id="@+id/pause"
-            android:visibility="gone"
             android:layout_width="60dp"
             android:layout_height="60dp"
+            android:background="@null"
             android:src="@drawable/ic_baseline_pause_24"
-            android:background="@null"/>
+            android:visibility="gone" />
+
         <ImageView
             android:id="@+id/play"
             android:layout_width="60dp"
             android:layout_height="60dp"
-            android:src="@drawable/ic_k_play_24"
-            android:background="@null"/>
+            android:background="@null"
+            android:src="@drawable/ic_k_play_24" />
+
         <ImageView
             android:id="@+id/next"
             android:layout_width="60dp"
             android:layout_height="60dp"
-            android:src="@drawable/ic_baseline_skip_next_24"
-            android:background="@null"/>
+            android:background="@null"
+            android:src="@drawable/ic_baseline_skip_next_24" />
 
     </LinearLayout>
 
-</LinearLayout>
+    <LinearLayout
+        android:id="@+id/seekLay"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="10dp"
+    android:orientation="horizontal"
+    app:layout_constraintTop_toBottomOf="@+id/linearLayout">
+
+    <TextView
+        android:id="@+id/position"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="00.00"
+        android:textColor="@color/white"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1" />
+
+    <TextView
+        android:id="@+id/lastPosition"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="00.00"
+        android:textColor="@color/white"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+    </LinearLayout>
+
+    <ListView
+        app:layout_constraintTop_toBottomOf="@+id/seekLay"
+        android:id="@+id/listView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <ImageButton
+        android:id="@+id/playList"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:src="@drawable/ic_baseline_menu_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

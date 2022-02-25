@@ -5,6 +5,10 @@
       <map>
         <entry key="..\:/Users/LukaAzanov/Desktop/Java/Android/AudioPlayer/app/src/main/res/drawable/ic_baseline_pause_24.xml" value="0.19479166666666667" />
         <entry key="..\:/Users/LukaAzanov/Desktop/Java/Android/AudioPlayer/app/src/main/res/layout/activity_main.xml" value="0.16666666666666666" />
+        <entry key="..\:/Users/lexeyus/AndroidStudioProjects/AudioPlayer-1/app/src/main/res/layout/activity_main.xml" value="0.25" />
+        <entry key="..\:/Users/lexeyus/AndroidStudioProjects/AudioPlayer-1/app/src/main/res/layout/activity_play.xml" value="0.20520833333333333" />
+        <entry key="..\:/Users/lexeyus/AndroidStudioProjects/AudioPlayer-1/app/src/main/res/layout/activity_play_lists.xml" value="0.36666666666666664" />
+        <entry key="..\:/Users/lexeyus/AndroidStudioProjects/AudioPlayer-1/app/src/main/res/layout/laysong.xml" value="0.20520833333333333" />
       </map>
     </option>
   </component>
