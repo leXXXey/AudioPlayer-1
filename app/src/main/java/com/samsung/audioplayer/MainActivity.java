@@ -6,6 +6,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -36,7 +37,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     final String toMusic ="/storage/self/primary/Music";
     TextView position, lastPosition;
-    ImageView previous, play, pause, next;
+    ImageView previous, play, pause, next, playList;
     SeekBar seekBar;
     MediaPlayer player;
     MyThread myThread;
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public ListView listView;
     final static int MY_PERMISSION_REQUEST = 1;
     Uri songUri;
+    int songPos;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +57,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
         }
+
+
         pause = findViewById(R.id.pause);
         pause.setOnClickListener(this);
         play = findViewById(R.id.play);
@@ -63,6 +67,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         previous.setOnClickListener(this);
         next = findViewById(R.id.next);
         next.setOnClickListener(this);
+        playList = findViewById(R.id.playList);
+        playList.setOnClickListener(this);
+
+
         player = MediaPlayer.create(this, R.raw.slipknotvermilionpt1);
         lastPosition = findViewById(R.id.lastPosition);
         lastPosition.setText(timeFormatter(player.getDuration()));
@@ -73,27 +81,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         myThread = new MyThread();
         myThread.start();
         File directory = new File(String.valueOf(toMusic));
-        File[] filesraw = directory.listFiles();
+        File[] filesRaw = directory.listFiles();
         files = new ArrayList<>();
-        for (int i = 0; i < filesraw.length; i++) {
-            if(filesraw[i].isFile()){
-                files.add(filesraw[i]);
+        for (int i = 0; i < filesRaw.length; i++) {
+            if(filesRaw[i].isFile()){
+                files.add(filesRaw[i]);
             }
         }
         arrayList = new ArrayList<>();
         listView = findViewById(R.id.listView);
         ArrayAdapter<File> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, files);
         listView.setAdapter(adapter);
-        getMusic();
+//        getMusic();
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View itemClicked, int position,
                                     long id) {
-                String song = ""+toMusic +"/" + files.get(position);
+                songUri = Uri.parse(String.valueOf(files.get(position)));
+                songPos = position;
                 try {
-                    player.setDataSource(song);
-                } catch (IOException e) {
+                    player.stop();
+                    player = new MediaPlayer();
+                    player = MediaPlayer.create(MainActivity.this, songUri);
+                    playSong();
+                    lastPosition.setText(timeFormatter(player.getDuration()));
+                    seekBar.setMax(player.getDuration());
+                    seekBar.setOnSeekBarChangeListener(MainActivity.this);
+
+                } catch (Exception e) {
                     e.printStackTrace();
+                    Toast.makeText(getApplicationContext(),"song", Toast.LENGTH_LONG).show();
+
                 }
             }
         });
@@ -101,27 +119,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+    @SuppressLint("NonConstantResourceId")
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.play:{
-                play.setVisibility(View.GONE);
-                pause.setVisibility(View.VISIBLE);
-                player.start();
+                playSong();
                 break;
             }
             case R.id.pause:{
-                play.setVisibility(View.VISIBLE);
-                pause.setVisibility(View.GONE);
-                player.pause();
+                pauseSong();
                 break;
             }
             case R.id.previous:{
-
+                try {
+                    songUri = Uri.parse(String.valueOf(files.get(songPos-1)));
+                    songPos --;
+                }catch (Exception e){
+                    songUri = Uri.parse(String.valueOf(files.get(files.size()-1)));
+                    songPos = files.size()-1;
+                }finally {
+                    newSongStart();
+                }
                 break;
             }
             case R.id.next:{
-
+                try {
+                    songUri = Uri.parse(String.valueOf(files.get(songPos+1)));
+                    songPos ++;
+                }catch (Exception e){
+                    songUri = Uri.parse(String.valueOf(files.get(0)));
+                    songPos = 0;
+                }finally {
+                    newSongStart();
+                }
                 break;
             }
             case R.id.playList:{
@@ -133,6 +164,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 throw new IllegalStateException("Unexpected value: " + view.getId());
         }
     }
+
+
+    public void playSong(){
+        play.setVisibility(View.GONE);
+        pause.setVisibility(View.VISIBLE);
+        player.start();
+    }
+    public void pauseSong(){
+        play.setVisibility(View.VISIBLE);
+        pause.setVisibility(View.GONE);
+        player.pause();
+    }
+    public void newSongStart(){
+        player.stop();
+        player = new MediaPlayer();
+        player = MediaPlayer.create(MainActivity.this, songUri);
+        playSong();
+        lastPosition.setText(timeFormatter(player.getDuration()));
+        seekBar.setMax(player.getDuration());
+        seekBar.setOnSeekBarChangeListener(MainActivity.this);
+    }
+
 
     public String timeFormatter(int time){
         time /= 1000;
@@ -180,23 +233,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    public void getMusic() {
-        ContentResolver contentResolver = getContentResolver();
-        songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        Cursor songCursor = contentResolver.query(songUri, null, null, null, null);
-        Log.d("no Tag", "1");
-        if (songCursor != null && songCursor.moveToFirst()) {
-            int songTitle = songCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
-            int songArtist = songCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
-            do {
-                String currentTitle = songCursor.getString(songTitle);
-                String currentArtist = songCursor.getString(songArtist);
-                arrayList.add(currentTitle + " " + currentArtist);
-                Log.d("My Tag", currentTitle + " " + currentArtist);
-            } while (songCursor.moveToNext());
-        }
-        Log.d("My Tag", String.valueOf(arrayList.size()));
-    }
+//    public void getMusic() {
+//        ContentResolver contentResolver = getContentResolver();
+//        songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+//        Cursor songCursor = contentResolver.query(songUri, null, null, null, null);
+//        Log.d("no Tag", "1");
+//        if (songCursor != null && songCursor.moveToFirst()) {
+//            int songTitle = songCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
+//            int songArtist = songCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
+//            do {
+//                String currentTitle = songCursor.getString(songTitle);
+//                String currentArtist = songCursor.getString(songArtist);
+//                arrayList.add(currentTitle + " " + currentArtist);
+//                Log.d("My Tag", currentTitle + " " + currentArtist);
+//            } while (songCursor.moveToNext());
+//        }
+//        Log.d("My Tag", String.valueOf(arrayList.size()));
+//    }
 
     class MyThread extends Thread{
         @Override
@@ -207,6 +260,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     sleep(500);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                }
+                try {
+                    if (String.valueOf(position.getText()).equals(String.valueOf(lastPosition.getText()))){
+                        try {
+                            songUri = Uri.parse(String.valueOf(files.get(songPos+1)));
+                            songPos ++;
+                        }catch (Exception e){
+                            songUri = Uri.parse(String.valueOf(files.get(0)));
+                            songPos = 0;
+                        }finally {
+                            newSongStart();
+                        }
+                    }
+                }catch (Exception ignored){
+
                 }
             }
         }
